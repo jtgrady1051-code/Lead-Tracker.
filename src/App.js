@@ -173,13 +173,34 @@ export default function LeadTracker() {
     await processTextToLead(importText);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newLead = {
       ...formData,
       id: Date.now(),
       createdAt: new Date().toISOString()
     };
+    
+    // Send to Google Sheets via Zapier webhook
+    try {
+      await fetch('https://hooks.zapier.com/hooks/catch/27399450/uv8w79c/', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newLead.name,
+          phone: newLead.phone,
+          company: newLead.company,
+          status: newLead.status,
+          painPoints: newLead.painPoints,
+          callNotes: newLead.callNotes,
+          followUpDate: newLead.followUpDate,
+          createdAt: newLead.createdAt
+        })
+      });
+    } catch (error) {
+      console.log('Failed to sync to Google Sheets:', error);
+      // Continue anyway - don't block the user
+    }
+    
     setLeads([newLead, ...leads]);
     setFormData({
       name: '', phone: '', company: '', status: 'cold',
