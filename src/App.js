@@ -181,10 +181,21 @@ export default function LeadTracker() {
       createdAt: new Date().toISOString()
     };
     
-    // Send to Google Sheets via Zapier webhook
+    // Update UI first (so user sees immediate feedback)
+    setLeads([newLead, ...leads]);
+    setFormData({
+      name: '', phone: '', company: '', status: 'cold',
+      painPoints: '', callNotes: '', followUpDate: ''
+    });
+    setShowAddForm(false);
+    showNotification('Lead added successfully!');
+    
+    // Send to Google Sheets via Zapier webhook (in background, no-cors mode)
     try {
-      await fetch('https://hooks.zapier.com/hooks/catch/27399450/uv8w79c/', {
+      fetch('https://hooks.zapier.com/hooks/catch/27399450/uv8w79c/', {
         method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newLead.name,
           phone: newLead.phone,
@@ -195,19 +206,10 @@ export default function LeadTracker() {
           followUpDate: newLead.followUpDate,
           createdAt: newLead.createdAt
         })
-      });
+      }).catch(err => console.log('Sheets sync failed:', err));
     } catch (error) {
       console.log('Failed to sync to Google Sheets:', error);
-      // Continue anyway - don't block the user
     }
-    
-    setLeads([newLead, ...leads]);
-    setFormData({
-      name: '', phone: '', company: '', status: 'cold',
-      painPoints: '', callNotes: '', followUpDate: ''
-    });
-    setShowAddForm(false);
-    showNotification('Lead added successfully!');
   };
 
   const updateLeadStatus = (id, newStatus) => {
