@@ -25,23 +25,22 @@ export default function LeadTracker() {
 
   // Load leads from storage on mount
   useEffect(() => {
-    const loadLeads = async () => {
-      try {
-        const stored = await window.storage.get('leads');
-        if (stored?.value) {
-          setLeads(JSON.parse(stored.value));
-        }
-      } catch (error) {
-        console.log('No existing leads found, starting fresh');
+    try {
+      const stored = localStorage.getItem('leads');
+      if (stored) {
+        setLeads(JSON.parse(stored));
       }
-    };
-    loadLeads();
+    } catch (error) {
+      console.log('No existing leads found, starting fresh');
+    }
   }, []);
 
   // Save leads to storage whenever they change
   useEffect(() => {
-    if (leads.length > 0) {
-      window.storage.set('leads', JSON.stringify(leads));
+    try {
+      localStorage.setItem('leads', JSON.stringify(leads));
+    } catch (error) {
+      console.log('Failed to save leads:', error);
     }
   }, [leads]);
 
